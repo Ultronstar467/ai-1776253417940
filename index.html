@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full-Stack Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        .calculator-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #007bff;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="number"] {
+            width: calc(50% - 10px);
+            padding: 12px 15px;
+            margin: 0 5px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1.1em;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 15px 20px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result-display {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #28a745;
+            min-height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            word-break: break-all;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+        @media (max-width: 600px) {
+            .calculator-container {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            input[type="number"] {
+                width: calc(100% - 10px);
+                margin: 5px 0;
+            }
+
+            .input-group {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .buttons-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <h1>Full-Stack Calculator</h1>
+        <div class="input-group">
+            <input type="number" id="numA" placeholder="Enter number A">
+            <input type="number" id="numB" placeholder="Enter number B">
+        </div>
+        <div class="buttons-grid">
+            <button id="btnAdd">Add (+)</button>
+            <button id="btnSub">Subtract (-)</button>
+            <button id="btnMul">Multiply (*)</button>
+            <button id="btnDiv">Divide (/)</button>
+        </div>
+        <div class="result-display">
+            <span id="result">Result will appear here</span>
+        </div>
+    </div>
+
+    <script>
+        const numAInput = document.getElementById('numA');
+        const numBInput = document.getElementById('numB');
+        const resultDisplay = document.getElementById('result');
+        const backendUrl = 'http://localhost:8000'; // Adjust if your FastAPI server runs on a different port/host
+
+        async function performCalculation(operation) {
+            const a = parseFloat(numAInput.value);
+            const b = parseFloat(numBInput.value);
+
+            if (isNaN(a) || isNaN(b)) {
+                resultDisplay.textContent = "Please enter valid numbers.";
+                resultDisplay.classList.add('error');
+                return;
+            }
+            resultDisplay.classList.remove('error');
+            resultDisplay.textContent = "Calculating...";
+
+            try {
+                const response = await fetch(`${backendUrl}/${operation}?a=${a}&b=${b}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDisplay.textContent = `Result: ${data.result}`;
+                    resultDisplay.classList.remove('error');
+                    resultDisplay.style.color = '#28a745';
+                } else {
+                    resultDisplay.textContent = `Error: ${data.detail || 'Unknown error'}`;
+                    resultDisplay.classList.add('error');
+                    resultDisplay.style.color = '#dc3545';
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                resultDisplay.textContent = `Network Error: ${error.message}`;
+                resultDisplay.classList.add('error');
+                resultDisplay.style.color = '#dc3545';
+            }
+        }
+
+        document.getElementById('btnAdd').addEventListener('click', () => performCalculation('add'));
+        document.getElementById('btnSub').addEventListener('click', () => performCalculation('sub'));
+        document.getElementById('btnMul').addEventListener('click', () => performCalculation('mul'));
+        document.getElementById('btnDiv').addEventListener('click', () => performCalculation('div'));
+    </script>
+</body>
+</html>
